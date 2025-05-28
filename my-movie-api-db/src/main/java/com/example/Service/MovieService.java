@@ -2,10 +2,13 @@ package com.example.Service;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.Model.Movie;
@@ -15,6 +18,7 @@ import com.example.Service.TMDBService;/* */
 
 @Service
 public class MovieService {
+    private static final Logger logger = LoggerFactory.getLogger(MovieService.class);
 
     @Autowired
     private MovieRepository movieRepository;
@@ -33,23 +37,88 @@ public class MovieService {
         return movieRepository.findById(id);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Movie addMovie(String title) {
-        // Check if movie already exists
-        Optional<Movie> existingMovie = movieRepository.findByTitleIgnoreCase(title);
-        if (existingMovie.isPresent()) {
-            throw new IllegalArgumentException("Movie already exists in database");
-        }
-
-        // Fetch movie data from both APIs
-        Movie omdbMovie = omdbService.fetchMovieData(title);
-        Movie tmdbMovie = tmdbService.fetchMovieData(title);
-
-        // Merge data from both APIs
-        Movie mergedMovie = mergeMovieData(omdbMovie, tmdbMovie);
+        logger.info("Starting movie addition process for title: {}", title);
+        Movie savedMovie = null;
         
-        // Save to database
-        return movieRepository.save(mergedMovie);
+        try {
+            // Check if movie already exists
+            logger.info("Checking if movie already exists in database");
+            Optional<Movie> existingMovie = movieRepository.findByTitleIgnoreCase(title);
+            if (existingMovie.isPresent()) {
+                logger.warn("Movie already exists in database: {}", title);
+                throw new IllegalArgumentException("Movie already exists in database");
+            }
+            logger.info("Movie does not exist in database, proceeding with API calls");
+
+            // Fetch movie data from both APIs
+            logger.info("Fetching movie data from OMDb API");
+            Movie omdbMovie = null;
+            try {
+                omdbMovie = omdbService.fetchMovieData(title);
+                logger.info("Successfully fetched data from OMDb API: {}", omdbMovie.getTitle());
+            } catch (Exception e) {
+                logger.error("Error fetching data from OMDb API: {}", e.getMessage());
+                throw new RuntimeException("Failed to fetch data from OMDb API: " + e.getMessage());
+            }
+
+            logger.info("Fetching movie data from TMDB API");
+            Movie tmdbMovie = null;
+            try {
+                tmdbMovie = tmdbService.fetchMovieData(title);
+                logger.info("Successfully fetched data from TMDB API: {}", tmdbMovie.getTitle());
+            } catch (Exception e) {
+                logger.error("Error fetching data from TMDB API: {}", e.getMessage());
+                // Don't throw here, as we can still proceed with OMDb data
+                logger.warn("Continuing with only OMDb data as TMDB fetch failed");
+            }
+
+            // Merge data from both APIs
+            logger.info("Merging movie data from both APIs");
+            Movie mergedMovie = mergeMovieData(omdbMovie, tmdbMovie);
+            logger.info("Successfully merged movie data. Title: {}, Year: {}, Director: {}", 
+                mergedMovie.getTitle(), mergedMovie.getYear(), mergedMovie.getDirector());
+            
+            // Validate merged movie data
+            if (mergedMovie.getMovieId() == null) {
+                logger.error("Movie ID is null after merging");
+                throw new RuntimeException("Movie ID is required but was not set");
+            }
+            
+            // Save to database
+            logger.info("Attempting to save movie to database");
+            try {
+                savedMovie = movieRepository.save(mergedMovie);
+                logger.info("Successfully saved movie to database with ID: {}", savedMovie.getId());
+                
+                // Verify the save by reading back from database
+                Optional<Movie> verifyMovie = movieRepository.findById(savedMovie.getId());
+                if (verifyMovie.isPresent()) {
+                    logger.info("Verified movie exists in database with ID: {}", savedMovie.getId());
+                } else {
+                    logger.error("Movie not found in database after save!");
+                    throw new RuntimeException("Movie not found in database after save");
+                }
+                
+                return savedMovie;
+            } catch (Exception e) {
+                logger.error("Error saving movie to database: {}", e.getMessage(), e);
+                throw new RuntimeException("Failed to save movie to database: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error in addMovie process: {}", e.getMessage(), e);
+            // If we saved the movie but encountered an error later, try to delete it
+            if (savedMovie != null && savedMovie.getId() != null) {
+                try {
+                    logger.info("Attempting to clean up saved movie due to error");
+                    movieRepository.deleteById(savedMovie.getId());
+                } catch (Exception deleteEx) {
+                    logger.error("Error cleaning up saved movie: {}", deleteEx.getMessage());
+                }
+            }
+            throw e;
+        }
     }
 
     @Transactional
@@ -62,15 +131,6 @@ public class MovieService {
     }
 
     @Transactional
-    public Movie updateRating(Long id, int rating) {
-        Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
-        
-        movie.setRating(rating);
-        return movieRepository.save(movie);
-    }
-
-    @Transactional
     public void deleteMovie(Long id) {
         if (!movieRepository.existsById(id)) {
             throw new IllegalArgumentException("Movie not found");
@@ -79,23 +139,44 @@ public class MovieService {
     }
 
     private Movie mergeMovieData(Movie omdbMovie, Movie tmdbMovie) {
+        logger.info("Starting movie data merge process");
         Movie mergedMovie = new Movie();
         
-        // Merge basic information
+        if (omdbMovie == null) {
+            logger.error("OMDb movie data is null");
+            throw new RuntimeException("OMDb movie data is required");
+        }
+        
+        // Merge basic information from OMDb
+        logger.info("Setting basic information from OMDb");
         mergedMovie.setTitle(omdbMovie.getTitle());
         mergedMovie.setYear(omdbMovie.getYear());
-        mergedMovie.setImdbId(omdbMovie.getImdbId());
+        mergedMovie.setDirector(omdbMovie.getDirector());
+        mergedMovie.setMovieId(omdbMovie.getMovieId());
         
-        // Merge additional details from TMDB
+        // Merge additional details from TMDB if available
         if (tmdbMovie != null) {
-            mergedMovie.setOverview(tmdbMovie.getOverview());
-            mergedMovie.setReleaseDate(tmdbMovie.getReleaseDate());
-            mergedMovie.setVoteAverage(tmdbMovie.getVoteAverage());
+            logger.info("Merging additional details from TMDB");
+            // If TMDB has a director and OMDb doesn't, use TMDB's
+            if (mergedMovie.getDirector() == null || mergedMovie.getDirector().isEmpty()) {
+                logger.info("Using director from TMDB");
+                mergedMovie.setDirector(tmdbMovie.getDirector());
+            }
+            
+            // If TMDB has a genre, use it
+            if (tmdbMovie.getGenre() != null && !tmdbMovie.getGenre().isEmpty()) {
+                logger.info("Using genre from TMDB");
+                mergedMovie.setGenre(tmdbMovie.getGenre());
+            }
         }
         
         // Set default values
+        logger.info("Setting default values");
         mergedMovie.setWatched(false);
-        mergedMovie.setRating(0);
+        mergedMovie.setSimilarMovieTitle(null);
+        
+        logger.info("Movie merge completed. Final movie data: Title={}, Year={}, Director={}, MovieId={}", 
+            mergedMovie.getTitle(), mergedMovie.getYear(), mergedMovie.getDirector(), mergedMovie.getMovieId());
         
         return mergedMovie;
     }

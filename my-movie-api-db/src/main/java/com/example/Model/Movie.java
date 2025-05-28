@@ -1,44 +1,62 @@
 package com.example.Model;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "movies") //check MySQL DB 
+@Table(name = "movies")
 public class Movie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "int unsigned")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "movie_id", nullable = false)
+    private Long movieId;
+
+    @Column(name = "title", length = 255)
     private String title;
 
-    private Integer year;
+    @Column(name = "year", length = 20)
+    private String year;
 
-    @Column(name = "imdb_id")
-    private String imdbId;
+    @Column(name = "director", length = 255)
+    private String director;
 
-    @Column(length = 1000)
-    private String overview;
+    @Column(name = "genre", length = 255)
+    private String genre;
 
-    @Column(name = "release_date")
-    private LocalDate releaseDate;
+    @Column(name = "watched", columnDefinition = "tinyint(1)")
+    private Boolean watched;
 
-    @Column(name = "vote_average")
-    private Double voteAverage;
+    @Column(name = "similar_movie_title", length = 255)
+    private String similarMovieTitle;
 
-    private boolean watched;
-
-    private Integer rating;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MovieImage> images = new ArrayList<>();
 
     // Default constructor
     public Movie() {
+    }
+
+    // Add helper method to manage bidirectional relationship
+    public void addImage(MovieImage image) {
+        images.add(image);
+        image.setMovie(this);
+    }
+
+    public void removeImage(MovieImage image) {
+        images.remove(image);
+        image.setMovie(null);
     }
 
     // Getters and Setters
@@ -50,6 +68,14 @@ public class Movie {
         this.id = id;
     }
 
+    public Long getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(Long movieId) {
+        this.movieId = movieId;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -58,59 +84,51 @@ public class Movie {
         this.title = title;
     }
 
-    public Integer getYear() {
+    public String getYear() {
         return year;
     }
 
-    public void setYear(Integer year) {
+    public void setYear(String year) {
         this.year = year;
     }
 
-    public String getImdbId() {
-        return imdbId;
+    public String getDirector() {
+        return director;
     }
 
-    public void setImdbId(String imdbId) {
-        this.imdbId = imdbId;
+    public void setDirector(String director) {
+        this.director = director;
     }
 
-    public String getOverview() {
-        return overview;
+    public String getGenre() {
+        return genre;
     }
 
-    public void setOverview(String overview) {
-        this.overview = overview;
+    public void setGenre(String genre) {
+        this.genre = genre;
     }
 
-    public LocalDate getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(LocalDate releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    public Double getVoteAverage() {
-        return voteAverage;
-    }
-
-    public void setVoteAverage(Double voteAverage) {
-        this.voteAverage = voteAverage;
-    }
-
-    public boolean isWatched() {
+    public Boolean isWatched() {
         return watched;
     }
 
-    public void setWatched(boolean watched) {
+    public void setWatched(Boolean watched) {
         this.watched = watched;
     }
 
-    public Integer getRating() {
-        return rating;
+    public String getSimilarMovieTitle() {
+        return similarMovieTitle;
     }
 
-    public void setRating(Integer rating) {
-        this.rating = rating;
+    public void setSimilarMovieTitle(String similarMovieTitle) {
+        this.similarMovieTitle = similarMovieTitle;
+    }
+
+    public List<MovieImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<MovieImage> images) {
+        this.images = images;
     }
 }

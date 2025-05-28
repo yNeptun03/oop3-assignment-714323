@@ -1,16 +1,27 @@
 package com.example.Controller;
 
-import com.example.Model.Movie;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.Model.Movie;
 import com.example.Service.MovieService;
 
 @RestController
 @RequestMapping("/api/movies")
 public class MovieController {
+    private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
     
     @Autowired
     private MovieService movieService;
@@ -32,11 +43,17 @@ public class MovieController {
     // Add a new movie (combines data from OMDb and TMDB)
     @PostMapping
     public ResponseEntity<Movie> addMovie(@RequestParam String title) {
+        logger.info("Received request to add movie: {}", title);
         try {
             Movie movie = movieService.addMovie(title);
+            logger.info("Successfully added movie: {}", movie.getTitle());
             return ResponseEntity.ok(movie);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            logger.warn("Invalid request to add movie: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Error adding movie: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -47,22 +64,6 @@ public class MovieController {
             @RequestParam boolean watched) {
         try {
             Movie updatedMovie = movieService.updateWatchedStatus(id, watched);
-            return ResponseEntity.ok(updatedMovie);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // Update movie rating
-    @PatchMapping("/{id}/rating")
-    public ResponseEntity<Movie> updateRating(
-            @PathVariable Long id,
-            @RequestParam int rating) {
-        if (rating < 1 || rating > 5) {
-            return ResponseEntity.badRequest().build();
-        }
-        try {
-            Movie updatedMovie = movieService.updateRating(id, rating);
             return ResponseEntity.ok(updatedMovie);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();

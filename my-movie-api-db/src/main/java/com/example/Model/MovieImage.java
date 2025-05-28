@@ -19,7 +19,7 @@ public class MovieImage {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "movie_id", nullable = false)
+    @JoinColumn(name = "movie_id", nullable = false, columnDefinition = "int unsigned")
     private Movie movie;
 
     @Column(name = "image_type", nullable = false)
