@@ -18,6 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Model.Movie;
 import com.example.Service.MovieService;
 
+/**
+ * Handle user REST request for managing movie operations.
+ * Provides endpoints for retrieving, adding, updating, and deleting movies.
+ * All endpoints are prefixed with "/api/movies".
+ * 
+ * @see Movie
+ * @see MovieService
+ */
 @RestController
 @RequestMapping("/api/movies")
 public class MovieController {
@@ -26,13 +34,24 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
 
-    // Get paginated list of movies
+    /**
+     * Retrieves a paginated list of all movies.
+     * 
+     * @param pageable Pagination parameters (page number, size, sorting)
+     * @return ResponseEntity containing a page of movies
+     * @see Pageable
+     */
     @GetMapping
     public ResponseEntity<Page<Movie>> getAllMovies(Pageable pageable) {
         return ResponseEntity.ok(movieService.getAllMovies(pageable));
     }
 
-    // Get a specific movie by ID
+    /**
+     * Retrieves a specific movie by its ID.
+     * 
+     * @param id The ID of the movie to retrieve
+     * @return ResponseEntity containing the movie if found, or 404 if not found
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
         return movieService.getMovieById(id)
@@ -40,7 +59,15 @@ public class MovieController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Add a new movie (combines data from OMDb and TMDB)
+    /**
+     * Adds a new movie by fetching and combining data from both OMDb and TMDB APIs.
+     * 
+     * @param title The title of the movie to add
+     * @return ResponseEntity containing the created movie if successful
+     *         - 200 OK if movie is successfully added
+     *         - 400 Bad Request if the movie already exists or title is invalid
+     *         - 500 Internal Server Error if API calls fail
+     */
     @PostMapping
     public ResponseEntity<Movie> addMovie(@RequestParam String title) {
         logger.info("Received request to add movie: {}", title);
@@ -57,7 +84,15 @@ public class MovieController {
         }
     }
 
-    // Update watched status
+    /**
+     * Updates the watched status of a movie.
+     * 
+     * @param id The ID of the movie to update
+     * @param watched The new watched status to set
+     * @return ResponseEntity containing the updated movie if successful
+     *         - 200 OK if update is successful
+     *         - 404 Not Found if movie doesn't exist
+     */
     @PatchMapping("/{id}/watched")
     public ResponseEntity<Movie> updateWatchedStatus(
             @PathVariable Long id,
@@ -70,7 +105,14 @@ public class MovieController {
         }
     }
 
-    // Delete a movie
+    /**
+     * Deletes a movie from the database.
+     * 
+     * @param id The ID of the movie to delete
+     * @return ResponseEntity with no content if successful
+     *         - 204 No Content if deletion is successful
+     *         - 404 Not Found if movie doesn't exist
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
         try {

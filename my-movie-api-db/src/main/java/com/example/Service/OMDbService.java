@@ -9,6 +9,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.Model.Movie;
 
+/**
+ * Service class that handles interactions with the Open Movie Database (OMDb) API.
+ * Provides functionality to fetch movie details including title, year, director, and IMDB ID.
+ */
 @Service
 public class OMDbService {
     private static final Logger logger = LoggerFactory.getLogger(OMDbService.class);
@@ -25,6 +29,14 @@ public class OMDbService {
         this.restTemplate = restTemplate;
     }
 
+    /**
+     * Fetches movie data from OMDb API based on the movie title.
+     * Retrieves movie details including title, year, director, and IMDB ID.
+     *
+     * @param title The title of the movie to search for
+     * @return Movie object containing the fetched movie data
+     * @throws RuntimeException if movie not found, invalid API key, or other API errors occur
+     */
     public Movie fetchMovieData(String title) {
         String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("apikey", apiKey)

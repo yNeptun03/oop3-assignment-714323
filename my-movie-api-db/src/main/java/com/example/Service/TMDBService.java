@@ -22,6 +22,10 @@ import com.example.Model.Movie;
 import com.example.Model.MovieImage;
 import com.example.Repository.MovieImageRepository;
 
+/**
+ * Service class that handles interactions with The Movie Database (TMDB) API.
+ * Provides functionality to fetch movie details, images, and similar movies.
+ */
 @Service
 public class TMDBService {
 
@@ -68,6 +72,14 @@ public class TMDBService {
         this.movieImageRepository = movieImageRepository;
     }
 
+    /**
+     * Fetches movie data from TMDB API based on the movie title.
+     * Retrieves movie details including title, year, genre, director, and images.
+     *
+     * @param title The title of the movie to search for
+     * @return Movie object containing the fetched movie data
+     * @throws RuntimeException if movie not found or API errors occur
+     */
     @Transactional
     public Movie fetchMovieData(String title) {
         try {
@@ -124,7 +136,11 @@ public class TMDBService {
             movie.setGenre(genre);
             
             movie.setWatched(false);
-            movie.setSimilarMovieTitle(null);
+
+            String similarMovieTitle = fetchSimilarMovie(firstResult.id);
+            movie.setSimilarMovieTitle(similarMovieTitle);
+
+
 
             // Try to download and store images, but continue even if it fails
             try {
@@ -220,5 +236,32 @@ public class TMDBService {
         public String director;
         public Integer status_code;
         public String status_message;
+    }
+
+    private static class TMDBSimilarMoviesResponse {
+        public List<TMDBMovieResult> results;
+        public Integer status_code;
+        public String status_message;
+    }
+
+    private String fetchSimilarMovie(int movieId) {
+        try {
+            String similarMoviesUrl = UriComponentsBuilder.fromHttpUrl(apiUrl + "/movie/" + movieId + "/similar")
+                    .queryParam("api_key", apiKey)
+                    .build()
+                    .toUriString();
+
+            TMDBSimilarMoviesResponse similarResponse = restTemplate.getForObject(similarMoviesUrl, TMDBSimilarMoviesResponse.class);
+            
+            if (similarResponse == null || similarResponse.results == null || similarResponse.results.isEmpty()) {
+                return null;
+            }
+
+            // Get the first similar movie's title
+            return similarResponse.results.get(0).title;
+        } catch (Exception e) {
+            System.err.println("Error fetching similar movies: " + e.getMessage());
+            return null;
+        }
     }
 } 

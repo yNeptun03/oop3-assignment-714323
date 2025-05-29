@@ -16,6 +16,10 @@ import com.example.Repository.MovieRepository;
 /*import com.example.Service.OMDbService;
 import com.example.Service.TMDBService;/* */
 
+/**
+ * Service class that manages movie operations by integrating data from both OMDb and TMDB APIs.
+ * Handles movie creation, updates, and deletion with data merging.
+ */
 @Service
 public class MovieService {
     private static final Logger logger = LoggerFactory.getLogger(MovieService.class);
@@ -29,14 +33,35 @@ public class MovieService {
     @Autowired
     private TMDBService tmdbService;
 
+    /**
+     * Retrieves a paginated list of all movies from the database.
+     *
+     * @param pageable Pagination parameters
+     * @return Page of movies
+     */
     public Page<Movie> getAllMovies(Pageable pageable) {
         return movieRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a movie by its ID.
+     *
+     * @param id The movie's ID
+     * @return Optional containing the movie if found
+     */
     public Optional<Movie> getMovieById(Long id) {
         return movieRepository.findById(id);
     }
 
+    /**
+     * Adds a new movie by fetching and merging data from both OMDb and TMDB APIs.
+     * Creates a new transaction for the operation.
+     *
+     * @param title The title of the movie to add
+     * @return The saved movie with merged data
+     * @throws IllegalArgumentException if movie already exists
+     * @throws RuntimeException if API calls fail or data validation fails
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Movie addMovie(String title) {
         logger.info("Starting movie addition process for title: {}", title);
@@ -121,6 +146,14 @@ public class MovieService {
         }
     }
 
+    /**
+     * Updates the watched status of a movie.
+     *
+     * @param id The movie's ID
+     * @param watched The new watched status
+     * @return The updated movie
+     * @throws IllegalArgumentException if movie not found
+     */
     @Transactional
     public Movie updateWatchedStatus(Long id, boolean watched) {
         Movie movie = movieRepository.findById(id)
@@ -130,6 +163,12 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
+    /**
+     * Deletes a movie from the database.
+     *
+     * @param id The movie's ID
+     * @throws IllegalArgumentException if movie not found
+     */
     @Transactional
     public void deleteMovie(Long id) {
         if (!movieRepository.existsById(id)) {
@@ -138,6 +177,15 @@ public class MovieService {
         movieRepository.deleteById(id);
     }
 
+    /**
+     * Merges movie data from OMDb and TMDB APIs, prioritizing OMDb data for basic information
+     * and supplementing with TMDB data when available.
+     *
+     * @param omdbMovie Movie data from OMDb API
+     * @param tmdbMovie Movie data from TMDB API
+     * @return Merged movie data
+     * @throws RuntimeException if OMDb data is null
+     */
     private Movie mergeMovieData(Movie omdbMovie, Movie tmdbMovie) {
         logger.info("Starting movie data merge process");
         Movie mergedMovie = new Movie();
