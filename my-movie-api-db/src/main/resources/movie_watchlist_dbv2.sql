@@ -16,35 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `movie`
---
-
-DROP TABLE IF EXISTS `movie`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `movie` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `movie_id` bigint NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `year` varchar(20) DEFAULT NULL,
-  `director` varchar(255) DEFAULT NULL,
-  `genre` varchar(255) DEFAULT NULL,
-  `watched` tinyint(1) DEFAULT NULL,
-  `similar_movie_title` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `movie`
---
-
-LOCK TABLES `movie` WRITE;
-/*!40000 ALTER TABLE `movie` DISABLE KEYS */;
-/*!40000 ALTER TABLE `movie` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `movie_images`
 --
 
@@ -89,7 +60,7 @@ CREATE TABLE `movies` (
   `watched` tinyint(1) DEFAULT NULL,
   `year` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -98,7 +69,7 @@ CREATE TABLE `movies` (
 
 LOCK TABLES `movies` WRITE;
 /*!40000 ALTER TABLE `movies` DISABLE KEYS */;
-INSERT INTO `movies` VALUES (6,'Christopher Nolan','Action',1375666,NULL,'Inception',0,'2010'),(7,'Tim Burton','Fantasy',96895,NULL,'Batman',0,'1989'),(8,'Christopher Nolan','Adventure',816692,NULL,'Interstellar',0,'2014'),(9,'Richard Donner','Action',78346,NULL,'Superman',1,'1978'),(10,'Denis Villeneuve','Science Fiction',1856101,NULL,'Blade Runner 2049',0,'2017'),(11,'Robert Schwentke','Action',1245526,NULL,'Red',0,'2010');
+INSERT INTO `movies` VALUES (6,'Christopher Nolan','Action',1375666,NULL,'Inception',0,'2010'),(7,'Tim Burton','Fantasy',96895,NULL,'Batman',0,'1989'),(8,'Christopher Nolan','Adventure',816692,NULL,'Interstellar',0,'2014'),(9,'Richard Donner','Action',78346,NULL,'Superman',1,'1978'),(10,'Denis Villeneuve','Science Fiction',1856101,NULL,'Blade Runner 2049',0,'2017'),(11,'Robert Schwentke','Action',1245526,NULL,'Red',0,'2010'),(12,'Jon M. Chu','Fantasy',1262426,NULL,'Wicked',0,'2024');
 /*!40000 ALTER TABLE `movies` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -111,4 +82,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-30  0:13:54
+-- Dump completed on 2025-06-01 18:02:51

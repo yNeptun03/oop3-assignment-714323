@@ -34,7 +34,7 @@ public class MovieService {
     private TMDBService tmdbService;
 
     /**
-     * Retrieves a paginated list of all movies from the database.
+     * Retrieves a list of all movies from the database.
      *
      * @param pageable Pagination parameters
      * @return Page of movies

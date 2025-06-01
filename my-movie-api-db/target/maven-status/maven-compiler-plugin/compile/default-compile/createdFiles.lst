@@ -2,6 +2,7 @@ com\example\Repository\MovieRepository.class
 com\example\Service\OMDbService.class
 com\example\Service\TMDBService$TMDBMovieDetail.class
 com\example\Service\TMDBService$TMDBMovieResult.class
+com\example\Service\TMDBService$TMDBSimilarMoviesResponse.class
 com\example\Service\TMDBService.class
 com\example\Service\TMDBService$TMDBSearchResponse.class
 com\example\Model\MovieImage.class
