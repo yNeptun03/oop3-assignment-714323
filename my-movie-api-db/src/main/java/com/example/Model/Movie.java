@@ -2,6 +2,7 @@ package com.example.Model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -276,5 +277,32 @@ public class Movie {
      */
     public void setImages(List<MovieImage> images) {
         this.images = images;
+    }
+
+    /**
+     * Returns a list of image content types for this movie using Streams.
+     */
+    public List<String> getImageContentTypes() {
+        return images.stream()
+                .map(MovieImage::getContentType)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a list of poster images for this movie using Streams.
+     */
+    public List<MovieImage> getPosterImages() {
+        return images.stream()
+                .filter(img -> "POSTER".equalsIgnoreCase(img.getImageType()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a count of all backdrop images for this movie using Streams.
+     */
+    public long countBackdropImages() {
+        return images.stream()
+                .filter(img -> "BACKDROP".equalsIgnoreCase(img.getImageType()))
+                .count();
     }
 }
