@@ -1,5 +1,7 @@
 package com.example.Controller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,5 +123,29 @@ public class MovieController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Retrieves a list of all unwatched movies.
+     * 
+     * @param pageable Pagination parameters (page number, size, sorting)
+     * @return ResponseEntity containing a list of unwatched movies
+     * @see Pageable
+     */
+    @GetMapping("/unwatched")
+    public ResponseEntity<List<Movie>> getUnwatchedMovies(Pageable pageable) {
+        return ResponseEntity.ok(movieService.getUnwatchedMovies(pageable));
+    }
+
+    /**
+     * Retrieves a list of all movie titles.
+     * 
+     * @param pageable Pagination parameters (page number, size, sorting)
+     * @return ResponseEntity containing a list of movie titles
+     * @see Pageable
+     */
+    @GetMapping("/titles")
+    public ResponseEntity<List<String>> getAllMovieTitles(Pageable pageable) {
+        return ResponseEntity.ok(movieService.getAllMovieTitles(pageable));
     }
 }
