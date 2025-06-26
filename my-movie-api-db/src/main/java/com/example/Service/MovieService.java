@@ -1,6 +1,8 @@
 package com.example.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,78 @@ public class MovieService {
      */
     public Optional<Movie> getMovieById(Long id) {
         return movieRepository.findById(id);
+    }
+
+    /**
+     * Retrieves a list of unwatched movies from the database using Streams API.
+     *
+     * @param pageable Pagination parameters
+     * @return List of unwatched movies
+     */
+    public List<Movie> getUnwatchedMovies(Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .filter(movie -> !movie.isWatched())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a list of all movie titles from the database using Streams API.
+     *
+     * @param pageable Pagination parameters
+     * @return List of movie titles
+     */
+    public List<String> getAllMovieTitles(Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .map(Movie::getTitle)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves movies by director using Streams API.
+     *
+     * @param director The director's name to filter by
+     * @param pageable Pagination parameters
+     * @return List of movies by the specified director
+     */
+    public List<Movie> getMoviesByDirector(String director, Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .filter(movie -> director.equalsIgnoreCase(movie.getDirector()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves movies by year using Streams API.
+     *
+     * @param year The year to filter by
+     * @param pageable Pagination parameters
+     * @return List of movies from the specified year
+     */
+    public List<Movie> getMoviesByYear(String year, Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .filter(movie -> year.equals(movie.getYear()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a list of watched movies from the database using Streams API.
+     *
+     * @param pageable Pagination parameters
+     * @return List of watched movies
+     */
+    public List<Movie> getWatchedMovies(Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .filter(Movie::isWatched)
+                .collect(Collectors.toList());
     }
 
     /**
